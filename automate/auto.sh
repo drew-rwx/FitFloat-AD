@@ -45,13 +45,13 @@ rm grabcc
 # *** Experiments ***
 
 echo "*** FLOAT TEST ***"
-./automate/test-float.sh $GPUARCH
+bash ./automate/test-float.sh $GPUARCH
 
 echo "*** DOUBLE TEST ***"
-./automate/test-double.sh $GPUARCH
+bash ./automate/test-double.sh $GPUARCH
 
 # *** Figures ***
 
-./parse.sh
+bash ./parse.sh
 
-./figures.sh
+bash ./figures.sh

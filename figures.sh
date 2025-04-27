@@ -36,8 +36,8 @@
 # Sponsor: This code is based upon work supported by the U.S. Department of Energy, National Nuclear Security Administration, under Award Number DE-NA0003969.
 #
 
-./figures.py spbus ./automate_res_float.speedups "Float Speedups"
-./figures.py spbus ./automate_res_double.speedups "Double Speedups"
+python3 ./figures.py spbus ./automate_res_float.speedups "Float Speedups"
+python3 ./figures.py spbus ./automate_res_double.speedups "Double Speedups"
 
-./figures.py spbmc ./automate_res_float.speedups ./automate_res_float.speedups "Float Memcpy Speedups"
-./figures.py spbmc ./automate_res_double.speedups ./automate_res_double.speedups "Double Memcpy Speedups"
+python3 ./figures.py spbmc ./automate_res_float.speedups ./automate_res_float.speedups "Float Memcpy Speedups"
+python3 ./figures.py spbmc ./automate_res_double.speedups ./automate_res_double.speedups "Double Memcpy Speedups"

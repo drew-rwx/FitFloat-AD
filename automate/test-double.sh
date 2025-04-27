@@ -68,7 +68,7 @@ do
 
         echo $outputfile
 
-        ./automate/compile_64.sh $e $m $GPUARCH $FILE
+        bash ./automate/compile_64.sh $e $m $GPUARCH $FILE
 
         ./flexfloat $RUNS 5 > $outputfile # add 
 
@@ -90,7 +90,7 @@ do
 
         echo $outputfile
 
-        ./automate/compile_64.sh $e $m $GPUARCH $FILE
+        bash ./automate/compile_64.sh $e $m $GPUARCH $FILE
 
         ./flexfloat $RUNS 6 > $outputfile # add 
 
@@ -101,7 +101,7 @@ done
 
 outputfileTMP="$RESULTS_DIR/TMP..IEEE..double.results"
 
-./automate/compile_64.sh 11 52 $GPUARCH $FILE
+bash ./automate/compile_64.sh 11 52 $GPUARCH $FILE
 ./flexfloat $RUNS 7 > $outputfileTMP # add
 echo -e "!!!!!\n" >> $outputfileTMP
 ./flexfloat $RUNS 11 >> $outputfileTMP # count

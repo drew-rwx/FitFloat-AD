@@ -43,24 +43,24 @@ function parse_all () {
 	TYPE="float"
 	SUB_DIR="${DEV}_${TYPE}"
 	FILE_STUB="FF..${TYPE}..*"
-	./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_${TYPE}.results"
+	python3 ./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_${TYPE}.results"
 	FILE_STUB="IEEE..${TYPE}..*"
-	./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ieee_${TYPE}.results"
+	python3 ./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ieee_${TYPE}.results"
 	FILE_STUB="FF..s..${TYPE}..*"
-	./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_s_${TYPE}.results"
+	python3 ./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_s_${TYPE}.results"
 
-	./quick_speedup_us.py "${1}_${DEV}_ieee_${TYPE}.results" "${1}_${DEV}_ff_${TYPE}.results" "${1}_${DEV}_ff_s_${TYPE}.results" > "${1}_${DEV}_${TYPE}.speedups"
+	python3 ./quick_speedup_us.py "${1}_${DEV}_ieee_${TYPE}.results" "${1}_${DEV}_ff_${TYPE}.results" "${1}_${DEV}_ff_s_${TYPE}.results" > "${1}_${DEV}_${TYPE}.speedups"
 
 	TYPE="double"
 	SUB_DIR="${DEV}_${TYPE}"
 	FILE_STUB="FF..${TYPE}..*"
-	./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_${TYPE}.results"
+	python3 ./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_${TYPE}.results"
 	FILE_STUB="IEEE..${TYPE}..*"
-	./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ieee_${TYPE}.results"
+	python3 ./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ieee_${TYPE}.results"
 	FILE_STUB="FF..s..${TYPE}..*"
-	./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_s_${TYPE}.results"
+	python3 ./parse.py "$RES_DIR/$SUB_DIR/$FILE_STUB" > "${1}_${DEV}_ff_s_${TYPE}.results"
 
-	./quick_speedup_us.py "${1}_${DEV}_ieee_${TYPE}.results" "${1}_${DEV}_ff_${TYPE}.results" "${1}_${DEV}_ff_s_${TYPE}.results" > "${1}_${DEV}_${TYPE}.speedups"
+	python3 ./quick_speedup_us.py "${1}_${DEV}_ieee_${TYPE}.results" "${1}_${DEV}_ff_${TYPE}.results" "${1}_${DEV}_ff_s_${TYPE}.results" > "${1}_${DEV}_${TYPE}.speedups"
 
 	rm ./*.results
 }
