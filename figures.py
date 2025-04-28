@@ -177,14 +177,6 @@ def tpb():
 	MIN_SPEEDUP = 0.0
 	MAX_SPEEDUP = 2.0
 
-	# set font
-	plt.rcParams['font.family'] = 'serif'
-	plt.rcParams['font.serif'] = ['CMU Serif']
-	plt.rcParams['axes.labelsize'] = 'x-large'
-	plt.rcParams['axes.titlesize'] = 'x-large'
-	plt.rcParams['xtick.labelsize'] = 'x-large'
-	plt.rcParams['ytick.labelsize'] = 'x-large'
-
 	NUM_KERNELS = 5
 
 	for k in range(1, NUM_KERNELS + 1):
@@ -282,14 +274,6 @@ def speedup():
 	MAX_BITS = 32 if "float" in sys.argv[3] else 64
 	MIN_SPEEDUP = 0.0
 	MAX_SPEEDUP = 2.0
-
-	# set font
-	plt.rcParams['font.family'] = 'serif'
-	plt.rcParams['font.serif'] = ['CMU Serif']
-	plt.rcParams['axes.labelsize'] = 'x-large'
-	plt.rcParams['axes.titlesize'] = 'x-large'
-	plt.rcParams['xtick.labelsize'] = 'x-large'
-	plt.rcParams['ytick.labelsize'] = 'x-large'
 
 
 	fig, ax = plt.subplots(figsize=(FIG_SIZE_WIDTH, FIG_SIZE_HEIGHT))
@@ -401,14 +385,6 @@ def speedup_m():
 	MIN_SPEEDUP = 0.0
 	
 
-	# set font
-	plt.rcParams['font.family'] = 'serif'
-	plt.rcParams['font.serif'] = ['CMU Serif']
-	plt.rcParams['axes.labelsize'] = 'x-large'
-	plt.rcParams['axes.titlesize'] = 'x-large'
-	plt.rcParams['xtick.labelsize'] = 'x-large'
-	plt.rcParams['ytick.labelsize'] = 'x-large'
-
 	NUM_KERNELS = 5
 
 	MACHINES = ['Austin (NVIDIA RTX 3090)', 'Brooks (Radeon Instinct MI100)', 'Bulach']
@@ -506,14 +482,6 @@ def speedup_1e():
 	MAX_BITS = 32 if "float" in FILE else 64
 	MIN_SPEEDUP = 0.0
 	MAX_SPEEDUP = 2.0
-
-	# set font
-	plt.rcParams['font.family'] = 'serif'
-	plt.rcParams['font.serif'] = ['CMU Serif']
-	plt.rcParams['axes.labelsize'] = 'x-large'
-	plt.rcParams['axes.titlesize'] = 'x-large'
-	plt.rcParams['xtick.labelsize'] = 'x-large'
-	plt.rcParams['ytick.labelsize'] = 'x-large'
 
 
 	fig, ax = plt.subplots(figsize=(FIG_SIZE_WIDTH, FIG_SIZE_HEIGHT))
@@ -646,14 +614,6 @@ def speedup_1e_us():
 	MAX_BITS = 32 if "float" in FILE else 64
 	MIN_SPEEDUP = 0.0
 	MAX_SPEEDUP = 2.0
-
-	# set font
-	plt.rcParams['font.family'] = 'serif'
-	plt.rcParams['font.serif'] = ['CMU Serif']
-	plt.rcParams['axes.labelsize'] = 'x-large'
-	plt.rcParams['axes.titlesize'] = 'x-large'
-	plt.rcParams['xtick.labelsize'] = 'x-large'
-	plt.rcParams['ytick.labelsize'] = 'x-large'
 
 
 	fig, ax = plt.subplots(figsize=(FIG_SIZE_WIDTH, FIG_SIZE_HEIGHT))
@@ -816,14 +776,6 @@ def speedup_1e_memcpy():
 	MAX_BITS = 32 if "float" in FILE else 64
 	MIN_SPEEDUP = 0.0
 	MAX_SPEEDUP = 2.0
-
-	# set font
-	plt.rcParams['font.family'] = 'serif'
-	plt.rcParams['font.serif'] = ['CMU Serif']
-	plt.rcParams['axes.labelsize'] = 'x-large'
-	plt.rcParams['axes.titlesize'] = 'x-large'
-	plt.rcParams['xtick.labelsize'] = 'x-large'
-	plt.rcParams['ytick.labelsize'] = 'x-large'
 
 
 	fig, ax = plt.subplots(figsize=(FIG_SIZE_WIDTH, FIG_SIZE_HEIGHT))
