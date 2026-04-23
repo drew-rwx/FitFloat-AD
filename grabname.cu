@@ -44,6 +44,6 @@ int main(int argc, char* argv [])
 {
 	cudaDeviceProp deviceProp;
 	cudaGetDeviceProperties(&deviceProp, 0);
-	printf("sm_%d%d", deviceProp.major, deviceProp.minor);
+	printf("%s\n", deviceProp.name);
 	return 0;
 }

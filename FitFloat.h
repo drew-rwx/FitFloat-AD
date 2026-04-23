@@ -1,25 +1,23 @@
 /*
-This file is part of FitFloat, a floating-point array representation for GPUs that allows the user to choose the number of bits in the exponent and mantissa fields.
- 
 BSD 3-Clause License
- 
-Copyright (c) 2025, Andrew Rodriguez and Martin Burtscher
+
+Copyright (c) 2021-2025, Noushin Azami, Alex Fallin, Brandon Burtchell, Andrew Rodriguez, Benila Jerald, Yiqian Liu, Anju Mongandampulath Akathoott, and Martin Burtscher
 All rights reserved.
- 
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
- 
+
 1. Redistributions of source code must retain the above copyright notice, this
    list of conditions and the following disclaimer.
- 
+
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
- 
+
 3. Neither the name of the copyright holder nor the names of its
    contributors may be used to endorse or promote products derived from
    this software without specific prior written permission.
- 
+
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,10 +28,6 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- 
-URL: The latest version of this code is available at https://github.com/burtscher/FitFloat.
- 
-Sponsor: This code is based upon work supported by the U.S. Department of Energy, National Nuclear Security Administration, under Award Number DE-NA0003969.
 */
 
 
@@ -49,13 +43,8 @@ Sponsor: This code is based upon work supported by the U.S. Department of Energy
 #endif
 
 
-#if defined(__AMDGCN_WAVEFRONT_SIZE) && (__AMDGCN_WAVEFRONT_SIZE == 64)
-  #define WS 64
-  #define FF_TPB 256
-#else
-  #define WS 32
-  #define FF_TPB 512
-#endif
+#define WS 32
+#define FF_TPB 512
 
 
 #ifndef BITS_FOR_EXPONENT_32
@@ -74,12 +63,39 @@ Sponsor: This code is based upon work supported by the U.S. Department of Energy
   #define BITS_FOR_MANTISSA_64 52
 #endif
 
+
 static const unsigned int FF_BITS_TOTAL_64 = 1 + BITS_FOR_EXPONENT_64 + BITS_FOR_MANTISSA_64;
 
 
-// **************
+size_t get_ffarray_size_float(size_t elements, size_t ff_bits)
+{
+  using U = float;
+
+  const size_t rounded_elements = (elements + 31) / 32 * 32;
+  const size_t bits_per_byte = 8;
+  const size_t minimum_bytes = (ff_bits * rounded_elements + bits_per_byte - 1) / bits_per_byte;
+  const size_t final_num_elements = (minimum_bytes + sizeof(U) - 1) / sizeof(U) + 1;
+
+  return final_num_elements;
+}
+
+
+size_t get_ffarray_size_double(size_t elements, size_t ff_bits)
+{
+  using U = double;
+
+  const size_t rounded_elements = (elements + 31) / 32 * 32;
+  const size_t bits_per_byte = 8;
+  const size_t minimum_bytes = (ff_bits * rounded_elements + bits_per_byte - 1) / bits_per_byte;
+  const size_t final_num_elements = (minimum_bytes + sizeof(U) - 1) / sizeof(U) + 1;
+
+  return final_num_elements;
+}
+
+
+// ***************
 // ** FitFloat **
-// **************
+// ***************
 
 
 template <typename T, unsigned int const USR_BITS_EXPO, unsigned int const USR_BITS_MANT, bool ftz = true, bool rnd = false>
@@ -90,7 +106,7 @@ class FitFloatArray
   static_assert(std::is_same<T, float>::value || std::is_same<T, double>::value, "FitFloatArray can only be instantiated with float or double types");
   using U = typename std::conditional<std::is_same<T, float>::value, unsigned int, unsigned long long>::type;
   static_assert(sizeof(T) == sizeof(U), "FitFloatArray internal error: type sizes do not match");
-  static_assert(sizeof(T) * 8 >= 1 + USR_BITS_EXPO + USR_BITS_MANT, "FitFloatArray number of bits exceeded");  // MB: refine
+  static_assert(sizeof(T) * 8 >= 1 + USR_BITS_EXPO + USR_BITS_MANT, "FitFloatArray number of bits exceeded");
 
   private:
     U* data;
@@ -221,6 +237,7 @@ class FitFloatArray
         return *this;
       }
 
+      // read
       __device__
       operator T() const
       {
@@ -537,8 +554,10 @@ class FitFloatArray
 
       backing_size = (size_in_bytes + sizeof(U) - 1) / sizeof(U) + 1;
 
-      cudaMalloc(&data, sizeof(U) * backing_size);
-      cudaMemset(data, 0, sizeof(U) * backing_size);
+      cudaMallocManaged(&data, sizeof(U) * backing_size);
+      for (size_t idx = 0; idx < backing_size; idx++) {
+        data[idx] = 0;
+      }
     }
 
     FitFloatArray(FitFloatArray& original) // Copy Constructor
@@ -689,6 +708,7 @@ class HostFitFloatArray
         return *this;
       }
 
+      // read
       operator T() const
       {
         const size_t bit_pos = idx * USR_BITS_TOTAL;
@@ -826,6 +846,7 @@ class HostFitFloatArray
     U* data_pointer() const noexcept { return data; }
 };
 
+
 typedef FitFloatArray<float, BITS_FOR_EXPONENT_32, BITS_FOR_MANTISSA_32> FFArr32;
 typedef FitFloatArray<double, BITS_FOR_EXPONENT_64, BITS_FOR_MANTISSA_64> FFArr64;
 typedef HostFitFloatArray<float, BITS_FOR_EXPONENT_32, BITS_FOR_MANTISSA_32> Host_FFArr32;
@@ -864,7 +885,7 @@ void FloatH2FFDmemcpy(FFArr32 dest, const float* src, const size_t num_elements)
     }
   }
 
-  cudaMemcpy(dest.data_pointer(), h_ff.data_pointer(), sizeof(float) * h_ff.actual_size(), cudaMemcpyHostToDevice);
+  cudaMemcpy(dest.data_pointer(), h_ff.data_pointer(), sizeof(float) * h_ff.actual_size(), cudaMemcpyHostToHost);
   CheckCuda(__LINE__);
 }
 
@@ -896,7 +917,7 @@ void DoubleH2FFDmemcpy(FFArr64 dest, const double* src, const size_t num_element
     }
   }
 
-  cudaMemcpy(dest.data_pointer(), h_ff.data_pointer(), sizeof(double) * h_ff.actual_size(), cudaMemcpyHostToDevice);
+  cudaMemcpy(dest.data_pointer(), h_ff.data_pointer(), sizeof(double) * h_ff.actual_size(), cudaMemcpyHostToHost);
   CheckCuda(__LINE__);
 }
 
@@ -910,100 +931,4 @@ void FFD2DoubleHmemcpy(double* dest, FFArr64 src, const size_t num_elements) {
   for (size_t idx = 0; idx < num_elements; idx++) {
     dest[idx] = h_ff[idx];
   }
-}
-
-
-// *******************************
-// ** FlexFloat Init. Functions **
-// *******************************
-
-
-__global__ void d_FF_initialize(FFArr32 dest, const float val, const size_t num_elements)
-{
-  const size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
-
-  if (idx < num_elements) {
-    dest.quick_write(idx, val);
-  }
-}
-
-static inline void FF_initialize(FFArr32 dest, const float val, const size_t num_elements)
-{
-  const size_t thread_blocks = (num_elements + FF_TPB - 1) / FF_TPB;
-
-  d_FF_initialize<<<thread_blocks, FF_TPB>>>(dest, val, num_elements);
-}
-
-__global__ void d_FF_initialize(FFArr64 dest, const double val, const size_t num_elements)
-{
-  const size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
-
-  if constexpr ((FF_BITS_TOTAL_64 % 2 == 0) || (WS == 64)) {
-    if (idx < num_elements) {
-      dest.quick_write(idx, val);
-    }
-  } else {
-    if (idx <= num_elements / 2) {
-      dest.quick_write_two_values(idx, val, val);
-    }
-  }
-}
-
-static inline void FF_initialize(FFArr64 dest, const double val, const size_t num_elements)
-{
-  const size_t thread_blocks = (num_elements + FF_TPB - 1) / FF_TPB;
-
-  d_FF_initialize<<<thread_blocks, FF_TPB>>>(dest, val, num_elements);
-}
-
-__global__ void d_FF_initialize(FFArr32 dest, const float* src, const size_t num_elements)
-{
-  const size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
-
-  if constexpr ((1 + BITS_FOR_EXPONENT_32 + BITS_FOR_MANTISSA_32) > 24) {
-    if (idx < num_elements) {
-      dest.quick_write(idx, src[idx]);
-    }
-  } else {
-    if (idx <= num_elements / 2) {
-      size_t v1_idx = idx * 2;
-      size_t v2_idx = v1_idx + 1;
-      if (v1_idx >= num_elements) v1_idx = 0;
-      if (v2_idx >= num_elements) v2_idx = 0;
-      dest.quick_write_two_values(idx, src[v1_idx], src[v2_idx]);
-    }
-  }
-}
-
-static inline void FF_initialize(FFArr32 dest, const float* src, const size_t num_elements)
-{
-  const size_t thread_blocks = (num_elements + FF_TPB - 1) / FF_TPB;
-
-  d_FF_initialize<<<thread_blocks, FF_TPB>>>(dest, src, num_elements);
-}
-
-__global__ void d_FF_initialize(FFArr64 dest, const double* src, const size_t num_elements)
-{
-  const size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
-
-  if constexpr ((FF_BITS_TOTAL_64 % 2 == 0) || (WS == 64)) {
-    if (idx < num_elements) {
-      dest.quick_write(idx, src[idx]);
-    }
-  } else {
-    if (idx <= num_elements / 2) {
-      size_t v1_idx = idx * 2;
-      size_t v2_idx = v1_idx + 1;
-      if (v1_idx >= num_elements) v1_idx = 0;
-      if (v2_idx >= num_elements) v2_idx = 0;
-      dest.quick_write_two_values(idx, src[v1_idx], src[v2_idx]);
-    }
-  }
-}
-
-static inline void FF_initialize(FFArr64 dest, const double* src, const size_t num_elements)
-{
-  const size_t thread_blocks = (num_elements + FF_TPB - 1) / FF_TPB;
-
-  d_FF_initialize<<<thread_blocks, FF_TPB>>>(dest, src, num_elements);
 }

@@ -1,10 +1,10 @@
-#
-# This file is part of FitFloat, a floating-point array representation for GPUs that allows the user to choose the number of bits in the exponent and mantissa fields.
+#!/usr/bin/env bash
+
+# This file is part of FitFloat, a drop-in floating-point array replacement supporting user-specified precision on GPUs with the goal of reducing storage requirements.
 #
 # BSD 3-Clause License
 #
-# Copyright (c) 2025, Andrew Rodriguez and Martin Burtscher
-# All rights reserved.
+# Copyright (c) 2026, Anju Mongandampulath Akathoott, Andrew Rodriguez, and Martin Burtscher
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -31,27 +31,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# URL: The latest version of this code is available at https://github.com/burtscher/FitFloat.
+# URL: The latest version of this code is available at https://github.com/burtscher/FitFloat/.
 #
-# Sponsor: This code is based upon work supported by the U.S. Department of Energy, National Nuclear Security Administration, under Award Number DE-NA0003969.
+# Publication: This work is described in detail in the following paper.
+# Andrew Rodriguez, and Martin Burtscher. "FitFloat: Read/Write Random-Access Compressed Floating-Point Arrays for GPUs"
 #
+# Sponsor: This material is based upon work supported by the U.S. National Science Foundation under Grant Number 2403380 and by the U.S. Department of Energy, Office of Science, Office of Advanced Scientific Research (ASCR), under Award Number DE-SC0022223.
 
-export CUDA_VISIBLE_DEVICES=0
-
-nvcc -O3 -arch=sm_75 grabcc.cu -o grabcc
-GPUARCH="$(./grabcc)"
-rm grabcc
-
-# *** Experiments ***
-
-echo "*** FLOAT TEST ***"
-bash ./automate/test-float.sh $GPUARCH
-
-echo "*** DOUBLE TEST ***"
-bash ./automate/test-double.sh $GPUARCH
-
-# *** Figures ***
-
-bash ./parse.sh
-
-bash ./figures.sh
+rm -f grabname
+rm -f grabcc
