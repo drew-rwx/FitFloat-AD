@@ -64,9 +64,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 
-static const unsigned int FF_BITS_TOTAL_64 = 1 + BITS_FOR_EXPONENT_64 + BITS_FOR_MANTISSA_64;
-
-
 size_t get_ffarray_size_float(size_t elements, size_t ff_bits)
 {
   using U = float;
@@ -331,7 +328,7 @@ class FitFloatArray
         const U recv = __shfl_xor(val, dist1);
 
         dist1 *= 2;
-        if (lane % dist1 == 0) {
+        if (lane & (dist1 - 1) == 0) {
           val |= recv << width1;
         }
         width1 *= 2;
@@ -454,7 +451,7 @@ class FitFloatArray
           const U recv = __shfl_xor(val, dist1);
 
           dist1 *= 2;
-          if (lane % dist1 == 0) {
+          if (lane & (dist1 - 1) == 0) {
             val |= recv << width1;
           }
           width1 *= 2;

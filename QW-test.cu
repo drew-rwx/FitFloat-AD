@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cassert>
 
-#include "../FitFloat.h"
+#include "FitFloat.h"
 
 
 struct GPUTimer
@@ -116,10 +116,6 @@ int main()
   std::sort(runtimes, runtimes + num_runs);
   const double ffqw_runtime = runtimes[num_runs / 2];
   printf("~ ff qw : %6f s, %.2fx, %.2fx\n", ffqw_runtime, native_runtime / ffqw_runtime, ff_runtime / ffqw_runtime);
-
-  cudaFree(a1);
-  cudaFree(b1);
-  cudaFree(c1);
 
   return 0;
 }
