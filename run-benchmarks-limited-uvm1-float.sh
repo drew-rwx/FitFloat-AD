@@ -13,10 +13,10 @@ RESULTS_DIR="./results/uvm1"
 
 mkdir -p $RESULTS_DIR
 
-declare -a expo=( 4)
-declare -a mant=(12 23)
-declare -a expo=( 4  5  6  7  8)
-declare -a mant=(12 13 14 15 16 17 18 19 20 21 22 23)
+declare -a expo=( 4  6)
+declare -a mant=(12 13)
+# declare -a expo=( 4  5  6  7  8)
+# declare -a mant=(12 13 14 15 16 17 18 19 20 21 22 23)
 
 for e in "${expo[@]}"
 do

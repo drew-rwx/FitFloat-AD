@@ -34,7 +34,7 @@ void runBlackScholesAnalyticEngine(const int repeat)
   size_t total_bytes = 0;
   cudaMemGetInfo(&free_bytes, &total_bytes);
 
-  size_t reserved_size = free_bytes - ((size_t) 1024) * 1024 * 1024;
+  size_t reserved_size = free_bytes - ((size_t) 1024) * 1024 * 1024 * 2;
 
   int* reserved = nullptr;
   cudaMalloc((void**) &reserved, reserved_size);
