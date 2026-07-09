@@ -181,7 +181,7 @@ void eval(IndexType input_size, int repeat)
     output_t *output = (output_t*) malloc (output_size_bytes); 
 
     output_t *d_output;
-    cudaMalloc((void**)&d_output, output_size_bytes);
+    cudaMallocManaged((void**)&d_output, output_size_bytes);
 
     dim3 grid ((input_size + threadsPerBlock - 1) / threadsPerBlock);
     dim3 block (threadsPerBlock);

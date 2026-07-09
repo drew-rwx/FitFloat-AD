@@ -43,7 +43,7 @@ void runBlackScholesAnalyticEngine(const int repeat)
 
   cudaMemGetInfo(&free_bytes, &total_bytes);
 
-  const size_t array_elements = free_bytes * factor / 4; // four arrays
+  const size_t array_elements = free_bytes * factor / 40; // four arrays each with 10 4-byte variables
 
   size_t numberOfSamples = array_elements;
 
