@@ -12,7 +12,7 @@
 #if defined(UVM1)
   #define factor 1.1
 #else
-  #define factor 2.5
+  #define factor 3.0
 #endif
 
 __global__ void chi_kernel(

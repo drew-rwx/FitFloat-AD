@@ -11,7 +11,7 @@
 #if defined(UVM1)
   #define factor 1.1
 #else
-  #define factor 2.5
+  #define factor 3.0
 #endif
 
 #define GPU_NUM_THREADS 256
