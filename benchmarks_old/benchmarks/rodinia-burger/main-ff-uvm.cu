@@ -1,0 +1,154 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <chrono>
+#include <cuda.h>
+#include "../../FlexFloat.h"
+#include "kernels-ff.h"
+
+int main(int argc, char* argv[])
+{
+  // query memory
+
+  size_t reserved_size = ((size_t) 1024) * 1024 * 1024 * 22;
+
+  size_t free_bytes = 0;
+  size_t total_bytes = 0;
+  cudaMemGetInfo(&free_bytes, &total_bytes);
+  printf("GPU memory: %zu free out of %zu total\n", free_bytes, total_bytes);
+
+  int* reserved = nullptr;
+  cudaMalloc((void**) &reserved, reserved_size);
+  cudaMemset(reserved, 1, reserved_size);
+  cudaDeviceSynchronize();
+
+  cudaMemGetInfo(&free_bytes, &total_bytes);
+
+  const double factor = 3.0;
+  const size_t array_elements = free_bytes * factor / 8;
+  const size_t array_size_in_bytes = array_elements * 4;
+  
+  const long long native_difference = free_bytes - array_size_in_bytes;
+  printf("GPU memory: %zu free out of %zu total\n", free_bytes, total_bytes);
+  printf("Native memory footprint: %zu bytes :: %lld byte difference from available memory\n", array_size_in_bytes, native_difference);
+
+  size_t user_ff_bits_array[] = {32, 31, 28, 24, 20, 17};
+
+  for (int i = 0; i < sizeof(user_ff_bits_array) / 8; i++) {
+    const size_t user_ff_bits = user_ff_bits_array[i];
+    const size_t ff_array_elements = get_ffarray_size_float(array_elements, user_ff_bits);
+    const size_t ff_array_size_in_bytes = ff_array_elements * 4;
+
+    const long long fitfloat_difference = array_size_in_bytes - ff_array_size_in_bytes;
+    const long long fitfloat_difference_available = free_bytes - ff_array_size_in_bytes;
+    printf("FF-%zu  memory footprint: %zu bytes :: %lld byte difference from native arrays, %lld from available memory\n", user_ff_bits, ff_array_size_in_bytes, fitfloat_difference, fitfloat_difference_available);    
+  }
+
+  // Define the domain
+  const size_t x_points = sqrt(array_elements / 4);
+  const size_t y_points = x_points;
+  const double x_len = 2.0;
+  const double y_len = 2.0;
+  const double del_x = x_len/(x_points-1);
+  const double del_y = y_len/(y_points-1);
+
+  const size_t grid_elems = x_points * y_points;
+  const size_t grid_size = sizeof(double) * grid_elems;
+
+  printf("Using %f GB\n", (1.0 * grid_elems*sizeof(double)*4) / 1000000000);
+
+  double *x = (double*) malloc (sizeof(double) * x_points);
+  double *y = (double*) malloc (sizeof(double) * y_points);
+  double *u = (double*) malloc (grid_size);
+  double *v = (double*) malloc (grid_size);
+  double *u_new = (double*) malloc (grid_size);
+  double *v_new = (double*) malloc (grid_size);
+
+  // store device results
+  double *du = (double*) malloc (grid_size);
+  double *dv = (double*) malloc (grid_size);
+
+  // Define the parameters
+  const int num_itrs = 1;     // Number of time iterations
+  const double nu = 0.01;
+  const double sigma = 0.0009;
+  const double del_t = sigma * del_x * del_y / nu;      // CFL criteria
+
+  printf("2D Burger's equation\n");
+  printf("Grid dimension: x = %zu y = %zu\n", x_points, y_points);
+
+  for(size_t i = 0; i < x_points; i++) x[i] = i * del_x;
+  for(size_t i = 0; i < y_points; i++) y[i] = i * del_y;
+
+  for(size_t i = 0; i < y_points; i++){
+    for(size_t j = 0; j < x_points; j++){
+      u[idx(i,j)] = 1.0;
+      v[idx(i,j)] = 1.0;
+      u_new[idx(i,j)] = 1.0;
+      v_new[idx(i,j)] = 1.0;
+
+      if(x[j] > 0.5 && x[j] < 1.0 && y[i] > 0.5 && y[i] < 1.0){
+        u[idx(i,j)] = 2.0;
+        v[idx(i,j)] = 2.0;
+        u_new[idx(i,j)] = 2.0;
+        v_new[idx(i,j)] = 2.0;
+      }
+    }
+  }
+
+  FFArr64 d_u_new(grid_elems);
+  FFArr64 d_v_new(grid_elems);
+  FFArr64 d_u(grid_elems);
+  FFArr64 d_v(grid_elems);
+
+  DoubleH2FFDmemcpy(d_u_new, u_new, grid_elems);
+  DoubleH2FFDmemcpy(d_v_new, v_new, grid_elems);
+  DoubleH2FFDmemcpy(d_u, u, grid_elems);
+  DoubleH2FFDmemcpy(d_v, v, grid_elems);
+
+  // ranges of the four kernels
+  dim3 grid ((x_points-2+15)/16, (y_points-2+15)/16);
+  dim3 block (16, 16);
+  dim3 grid2 ((x_points+255)/256);
+  dim3 block2 (256);
+  dim3 grid3 ((y_points+255)/256);
+  dim3 block3 (256);
+  dim3 grid4 ((grid_elems+255)/256);
+  dim3 block4 (256);
+
+  cudaDeviceSynchronize();
+
+  double rts[num_itrs];
+  for(int itr = 0; itr < num_itrs; itr++){
+    auto start=std::chrono::steady_clock::now();
+
+    core<<<grid, block>>>(d_u_new, d_v_new, d_u, d_v, x_points, y_points, nu, del_t, del_x, del_y);
+
+    // Boundary conditions
+    bound_h<<<grid2, block2>>>(d_u_new, d_v_new, x_points, y_points);
+
+    bound_v<<<grid3, block3>>>(d_u_new, d_v_new, x_points, y_points);
+
+    // Updating older values to newer ones
+    update<<<grid4, block4>>>(d_u, d_v, d_u_new, d_v_new, grid_elems);
+
+    cudaDeviceSynchronize();
+    auto end = std::chrono::steady_clock::now();
+    auto time = std::chrono:: duration_cast<std::chrono::nanoseconds>(end - start).count();
+    rts[itr] = time * 1e-9f;
+  }
+  printf("~ burger: %f (s)\n", rts[num_itrs / 2]);
+
+
+  free(x);
+  free(y);
+  free(u);
+  free(v);
+  free(du);
+  free(dv);
+  free(u_new);
+  free(v_new);
+
+  return 0;
+}

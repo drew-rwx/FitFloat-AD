@@ -1,0 +1,315 @@
+//blackScholesAnalyticEngine.cu
+//Scott Grauer-Gray
+//Functions for running black scholes using the analytic engine (from Quantlib) on the GPU
+
+#include <stdio.h>
+#include <math.h>
+#include <sys/time.h>
+#include <time.h>
+#include <cuda.h>
+#include "../../FlexFloat.h"
+
+//needed for optionInputStruct
+#include "blackScholesAnalyticEngineStructs.cuh"
+
+//needed for the kernel(s) to run on the GPU
+#include "blackScholesAnalyticEngineKernels.cu"
+
+#include "blackScholesAnalyticEngineKernelsCpu.cu"
+
+#define NUM_DIFF_SETTINGS 37
+
+//function to run the black scholes analytic engine on the gpu
+void runBlackScholesAnalyticEngine(const int repeat)
+{
+  // query memory
+
+  size_t reserved_size = ((size_t) 1024) * 1024 * 1024 * 22;
+
+  size_t free_bytes = 0;
+  size_t total_bytes = 0;
+  cudaMemGetInfo(&free_bytes, &total_bytes);
+  printf("GPU memory: %zu free out of %zu total\n", free_bytes, total_bytes);
+
+  int* reserved = nullptr;
+  cudaMalloc((void**) &reserved, reserved_size);
+  cudaMemset(reserved, 1, reserved_size);
+  cudaDeviceSynchronize();
+
+  cudaMemGetInfo(&free_bytes, &total_bytes);
+
+  const double factor = 3.0;
+  const size_t array_elements = free_bytes * factor / 40; // four arrays
+  const size_t array_size_in_bytes = array_elements * 4;
+  
+  const long long native_difference = free_bytes - array_size_in_bytes;
+  printf("GPU memory: %zu free out of %zu total\n", free_bytes, total_bytes);
+  printf("Native memory footprint: %zu bytes :: %lld byte difference from available memory\n", array_size_in_bytes, native_difference);
+
+  size_t user_ff_bits_array[] = {32, 31, 28, 24, 20, 17};
+
+  for (int i = 0; i < sizeof(user_ff_bits_array) / 8; i++) {
+    const size_t user_ff_bits = user_ff_bits_array[i];
+    const size_t ff_array_elements = get_ffarray_size_float(array_elements, user_ff_bits);
+    const size_t ff_array_size_in_bytes = ff_array_elements * 4;
+
+    const long long fitfloat_difference = array_size_in_bytes - ff_array_size_in_bytes;
+    const long long fitfloat_difference_available = free_bytes - ff_array_size_in_bytes;
+    printf("FF-%zu  memory footprint: %zu bytes :: %lld byte difference from native arrays, %lld from available memory\n", user_ff_bits, ff_array_size_in_bytes, fitfloat_difference, fitfloat_difference_available);    
+  }
+  size_t numberOfSamples = array_elements;
+  printf("Using %f GB\n", ((1.0 * numberOfSamples * sizeof(optionInputStruct)) + (1.0 * numberOfSamples * sizeof(float))) / 1000000000);
+
+
+  {
+    size_t numVals = numberOfSamples;//nSamplesArray[numTime];
+
+    optionInputStruct* values = new optionInputStruct[numVals];
+
+    for (size_t numOption = 0; numOption < numVals; numOption++)
+    {
+      if ((numOption % NUM_DIFF_SETTINGS) == 0)
+      {
+        optionInputStruct currVal = { CALL,  40.00,  42.00, 0.08, 0.04, 0.75, 0.35,  5.0975, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 1)
+      {
+        optionInputStruct currVal = { CALL, 100.00,  90.00, 0.10, 0.10, 0.10, 0.15,  0.0205, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 2)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 100.00, 0.10, 0.10, 0.10, 0.15,  1.8734, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 3)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 110.00, 0.10, 0.10, 0.10, 0.15,  9.9413, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 4)
+      {
+        optionInputStruct currVal = { CALL, 100.00,  90.00, 0.10, 0.10, 0.10, 0.25,  0.3150, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 5)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 100.00, 0.10, 0.10, 0.10, 0.25,  3.1217, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 6)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 110.00, 0.10, 0.10, 0.10, 0.25, 10.3556, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 7)
+      {
+        optionInputStruct currVal =  { CALL, 100.00,  90.00, 0.10, 0.10, 0.10, 0.35,  0.9474, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 8)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 100.00, 0.10, 0.10, 0.10, 0.35,  4.3693, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 9)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 110.00, 0.10, 0.10, 0.10, 0.35, 11.1381, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 10)
+      {
+        optionInputStruct currVal =  { CALL, 100.00,  90.00, 0.10, 0.10, 0.50, 0.15,  0.8069, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 11)
+      {
+        optionInputStruct currVal =  { CALL, 100.00, 100.00, 0.10, 0.10, 0.50, 0.15,  4.0232, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 12)
+      {
+        optionInputStruct currVal =  { CALL, 100.00, 110.00, 0.10, 0.10, 0.50, 0.15, 10.5769, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 13)
+      {
+        optionInputStruct currVal =   { CALL, 100.00,  90.00, 0.10, 0.10, 0.50, 0.25,  2.7026, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 14)
+      {
+        optionInputStruct currVal =   { CALL, 100.00, 100.00, 0.10, 0.10, 0.50, 0.25,  6.6997, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 15)
+      {
+        optionInputStruct currVal =   { CALL, 100.00, 110.00, 0.10, 0.10, 0.50, 0.25, 12.7857, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 16)
+      {
+        optionInputStruct currVal =   { CALL, 100.00,  90.00, 0.10, 0.10, 0.50, 0.35,  4.9329, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 17)
+      {
+        optionInputStruct currVal =  { CALL, 100.00, 100.00, 0.10, 0.10, 0.50, 0.35,  9.3679, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 18)
+      {
+        optionInputStruct currVal = { CALL, 100.00, 110.00, 0.10, 0.10, 0.50, 0.35, 15.3086, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 19)
+      {
+        optionInputStruct currVal =  { PUT,  100.00,  90.00, 0.10, 0.10, 0.10, 0.15,  9.9210, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 20)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 100.00, 0.10, 0.10, 0.10, 0.15,  1.8734, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 21)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 110.00, 0.10, 0.10, 0.10, 0.15,  0.0408, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 22)
+      {
+        optionInputStruct currVal =  { PUT,  100.00,  90.00, 0.10, 0.10, 0.10, 0.25, 10.2155, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 23)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 100.00, 0.10, 0.10, 0.10, 0.25,  3.1217, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 24)
+      {
+        optionInputStruct currVal =    { PUT,  100.00, 110.00, 0.10, 0.10, 0.10, 0.25,  0.4551, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 25)
+      {
+        optionInputStruct currVal =  { PUT,  100.00,  90.00, 0.10, 0.10, 0.10, 0.35, 10.8479, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 26)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 100.00, 0.10, 0.10, 0.10, 0.35,  4.3693, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 27)
+      {
+        optionInputStruct currVal =  { PUT,  100.00, 110.00, 0.10, 0.10, 0.10, 0.35,  1.2376, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 28)
+      {
+        optionInputStruct currVal =  { PUT,  100.00,  90.00, 0.10, 0.10, 0.50, 0.15, 10.3192, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 29)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 100.00, 0.10, 0.10, 0.50, 0.15,  4.0232, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 30)
+      {
+        optionInputStruct currVal =  { PUT,  100.00, 110.00, 0.10, 0.10, 0.50, 0.15,  1.0646, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 31)
+      {
+        optionInputStruct currVal =  { PUT,  100.00,  90.00, 0.10, 0.10, 0.50, 0.25, 12.2149, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 32)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 100.00, 0.10, 0.10, 0.50, 0.25,  6.6997, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 33)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 110.00, 0.10, 0.10, 0.50, 0.25,  3.2734, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 34)
+      {
+        optionInputStruct currVal =   { PUT,  100.00,  90.00, 0.10, 0.10, 0.50, 0.35, 14.4452, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 35)
+      {
+        optionInputStruct currVal =  { PUT,  100.00, 100.00, 0.10, 0.10, 0.50, 0.35,  9.3679, 1.0e-4};
+        values[numOption] = currVal;
+      }
+      if ((numOption % NUM_DIFF_SETTINGS) == 36)
+      {
+        optionInputStruct currVal =   { PUT,  100.00, 110.00, 0.10, 0.10, 0.50, 0.35,  5.7963, 1.0e-4};
+        values[numOption] = currVal;
+      }
+    }
+
+    // Run GPU code
+
+    //initialize the arrays
+
+    //declare and allocate the input and output data on the CPU
+    float* outputVals = (float*)malloc(numVals * sizeof(float));
+
+    printf("Number of options: %d\n\n", numVals);
+    long seconds, useconds, kseconds, kuseconds;
+    float mtimeCpu, mtimeGpu, ktimeGpu;
+    struct timeval start;
+    gettimeofday(&start, NULL);
+
+    //declare the data on the GPU
+    optionInputStruct* optionsGpu;
+    float* outputValsGpu;
+
+    //allocate space for data on GPU
+    cudaMallocManaged((void**)&optionsGpu, numVals * sizeof(optionInputStruct));
+    cudaMallocManaged((void**)&outputValsGpu, numVals * sizeof(float));
+
+    //copy the data from the CPU to the GPU
+    cudaMemcpy(optionsGpu, values, numVals * sizeof(optionInputStruct), cudaMemcpyHostToHost);
+
+    // setup execution parameters
+    dim3  grid((numVals + THREAD_BLOCK_SIZE - 1)/THREAD_BLOCK_SIZE, 1, 1);
+    dim3  threads( THREAD_BLOCK_SIZE, 1, 1);
+
+    double rts[repeat];
+    for (int i = 0; i < repeat; i++) {
+      struct timeval kstart;
+      gettimeofday(&kstart, NULL);
+      getOutValOption <<< dim3(grid), dim3(threads) >>> (optionsGpu, outputValsGpu, numVals);
+      cudaDeviceSynchronize();
+      struct timeval kend;
+      gettimeofday(&kend, NULL);
+      kseconds  = kend.tv_sec  - kstart.tv_sec;
+      kuseconds = kend.tv_usec - kstart.tv_usec;
+      ktimeGpu = ((kseconds) * 1000 + ((float)kuseconds)/1000.0) + 0.5f;
+      rts[i] = ktimeGpu * 0.001;
+    }
+    printf("~ bscholes: %f (s)\n", rts[repeat / 2]);
+
+    //copy the resulting option values back to the CPU
+    cudaMemcpy(outputVals, outputValsGpu, numVals * sizeof(float), cudaMemcpyDeviceToHost);
+
+    cudaFree(optionsGpu);
+    cudaFree(outputValsGpu);
+
+    free(outputVals);
+  }
+}
+
+int main( int argc, char** argv) 
+{
+  runBlackScholesAnalyticEngine(9);
+  return 0;
+}

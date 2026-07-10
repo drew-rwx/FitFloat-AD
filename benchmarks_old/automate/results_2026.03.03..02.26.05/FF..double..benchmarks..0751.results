@@ -1,0 +1,61 @@
+GPU memory: 24975835136 free out of 25386352640 total
+GPU memory: 23920640 free out of 25386352640 total
+Native memory footprint: 35880936 bytes :: -11960296 byte difference from available memory
+FF-32  memory footprint: 35881244 bytes :: -308 byte difference from native arrays, -11960604 from available memory
+FF-31  memory footprint: 34759956 bytes :: 1120980 byte difference from native arrays, -10839316 from available memory
+FF-28  memory footprint: 31396092 bytes :: 4484844 byte difference from native arrays, -7475452 from available memory
+FF-24  memory footprint: 26910940 bytes :: 8969996 byte difference from native arrays, -2990300 from available memory
+FF-20  memory footprint: 22425788 bytes :: 13455148 byte difference from native arrays, 1494852 from available memory
+FF-17  memory footprint: 19061924 bytes :: 16819012 byte difference from native arrays, 4858716 from available memory
+Data type in bytes: 8
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 525026256 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 525026256 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 131256596 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 3687504 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 131256596 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 131256596 bytes
+~ adv: 0.190000 (us)
+!!!!!
+
+GPU memory: 24975835136 free out of 25386352640 total
+GPU memory: 23920640 free out of 25386352640 total
+Native memory footprint: 125583360 bytes :: -101662720 byte difference from available memory
+FF-32  memory footprint: 125583388 bytes :: -28 byte difference from native arrays, -101662748 from available memory
+FF-31  memory footprint: 121658908 bytes :: 3924452 byte difference from native arrays, -97738268 from available memory
+FF-28  memory footprint: 109885468 bytes :: 15697892 byte difference from native arrays, -85964828 from available memory
+FF-24  memory footprint: 94187548 bytes :: 31395812 byte difference from native arrays, -70266908 from available memory
+FF-20  memory footprint: 78489628 bytes :: 47093732 byte difference from native arrays, -54568988 from available memory
+FF-17  memory footprint: 66716188 bytes :: 58867172 byte difference from native arrays, -42795548 from available memory
+Using 0.04 GB for data
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 16553988 bytes
+~ asta: 6.520992 (s)
+!!!!!
+
+GPU memory: 24975835136 free out of 25386352640 total
+GPU memory: 1353515008 free out of 25386352640 total
+Native memory footprint: 2030272512 bytes :: -676757504 byte difference from available memory
+FF-32  memory footprint: 2030272516 bytes :: -4 byte difference from native arrays, -676757508 from available memory
+FF-31  memory footprint: 1966826500 bytes :: 63446012 byte difference from native arrays, -613311492 from available memory
+FF-28  memory footprint: 1776488452 bytes :: 253784060 byte difference from native arrays, -422973444 from available memory
+FF-24  memory footprint: 1522704388 bytes :: 507568124 byte difference from native arrays, -169189380 from available memory
+FF-20  memory footprint: 1268920324 bytes :: 761352188 byte difference from native arrays, 84594684 from available memory
+FF-17  memory footprint: 1078582276 bytes :: 951690236 byte difference from native arrays, 274932732 from available memory
+Using 4.060086 GB
+2D Burger's equation
+Grid dimension: x = 11264 y = 11264
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 467861508 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 467861508 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 467861508 bytes
+FlexFloatArray:: 7 expo, 51 mant, 59 total
+	Using 467861508 bytes
+~ burger: 1.290953 (s)
