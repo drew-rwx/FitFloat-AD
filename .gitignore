@@ -47,3 +47,5 @@ benchmarks/chi2-ff
 
 benchmarks/fhd
 benchmarks/fhd-ff
+
+*.results

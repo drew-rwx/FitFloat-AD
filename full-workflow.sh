@@ -86,10 +86,10 @@ echo "Running second UVM case."
 bash run-benchmarks-limited-uvm2-float.sh $GPUARCH
 echo ""
 
-# # generate figures
-# echo "Generating figures."
-# python3 generate-figures.py ./single_inputs.results
-# echo ""
+# generate figures
+echo "Generating figures."
+python3 generate-figures.py float > float.results
+echo ""
 
 
 #
@@ -106,10 +106,10 @@ echo "Running second UVM case."
 bash run-benchmarks-limited-uvm2-double.sh $GPUARCH
 echo ""
 
-# # generate figures
-# echo "Generating figures."
-# python3 generate-figures.py ./double_inputs.results
-# echo ""
+# generate figures
+echo "Generating figures."
+python3 generate-figures.py double > double.results
+echo ""
 
 
 # remove intermediate files
