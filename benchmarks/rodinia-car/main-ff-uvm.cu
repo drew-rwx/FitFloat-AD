@@ -13,6 +13,12 @@
   #define factor 3.0
 #endif
 
+#if defined(INPUT_SIZE_SMALL)
+  #define reserve_gb 2
+#else
+  #define reserve_gb 8
+#endif
+
 __global__ void car (
     FFArr32 img,
     FFArr32 kernels,
@@ -85,7 +91,7 @@ int main(int argc, char* argv[]) {
   size_t total_bytes = 0;
   cudaMemGetInfo(&free_bytes, &total_bytes);
 
-  size_t reserved_size = free_bytes - ((size_t) 1024) * 1024 * 1024 * 2;
+  size_t reserved_size = free_bytes - ((size_t) 1024) * 1024 * 1024 * reserve_gb;
 
   int* reserved = nullptr;
   cudaMalloc((void**) &reserved, reserved_size);

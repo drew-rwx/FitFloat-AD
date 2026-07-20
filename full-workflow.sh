@@ -65,7 +65,7 @@ echo "Using GPU: $GPUNAME"
 echo "Using arch: $GPUARCH"
 
 
-# set the following variable to true to use fewer FitFloat configurations
+# set the following variable to false to test all FitFloat configurations
 use_limited_configuration_set=true
 
 
@@ -79,11 +79,11 @@ mkdir -p ./figures
 
 # run codes
 echo "Running first UVM case."
-bash run-benchmarks-limited-uvm1-float.sh $GPUARCH
+bash run-benchmarks-limited-uvm1-float.sh $GPUARCH $use_limited_configuration_set
 echo ""
 
 echo "Running second UVM case."
-bash run-benchmarks-limited-uvm2-float.sh $GPUARCH
+bash run-benchmarks-limited-uvm2-float.sh $GPUARCH $use_limited_configuration_set
 echo ""
 
 # generate figures
@@ -99,11 +99,11 @@ echo ""
 
 # run codes
 echo "Running first UVM case."
-bash run-benchmarks-limited-uvm1-double.sh $GPUARCH
+bash run-benchmarks-limited-uvm1-double.sh $GPUARCH $use_limited_configuration_set
 echo ""
 
 echo "Running second UVM case."
-bash run-benchmarks-limited-uvm2-double.sh $GPUARCH
+bash run-benchmarks-limited-uvm2-double.sh $GPUARCH $use_limited_configuration_set
 echo ""
 
 # generate figures

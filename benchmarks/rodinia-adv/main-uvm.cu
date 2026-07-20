@@ -11,6 +11,12 @@
   #define factor 3.0
 #endif
 
+#if defined(INPUT_SIZE_SMALL)
+  #define reserve_gb 2
+#else
+  #define reserve_gb 8
+#endif
+
 #define p_IJWID 6
 #define p_JID   4
 #define p_JWID  5

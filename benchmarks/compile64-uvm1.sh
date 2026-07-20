@@ -9,7 +9,7 @@ function compile-file () {
 
     echo "Compiling $FILE with $BITS_EXPO_64 exponent bits and $BITS_MANT_64 mantissa bits."
 
-    nvcc -O3 -Xcompiler -fopenmp -arch=$GPUARCH -DBITS_FOR_EXPONENT_64=$BITS_EXPO_64 -DBITS_FOR_MANTISSA_64=$BITS_MANT_64 -DUVM1 $FILE -o $EXEC
+    nvcc -O3 -Xcompiler -fopenmp -w -arch=$GPUARCH -DBITS_FOR_EXPONENT_64=$BITS_EXPO_64 -DBITS_FOR_MANTISSA_64=$BITS_MANT_64 -DUVM1 $INPUT_SIZE_FLAG $FILE -o $EXEC
 }
 
 # default params
@@ -17,6 +17,14 @@ function compile-file () {
 BITS_EXPO_64=$1
 BITS_MANT_64=$2
 GPUARCH=$3
+
+use_limited_configuration_set=$4
+
+if [[ "$use_limited_configuration_set" = false ]]; then
+    INPUT_SIZE_FLAG=""
+else
+    INPUT_SIZE_FLAG="-DINPUT_SIZE_SMALL"
+fi
 
 #
 #

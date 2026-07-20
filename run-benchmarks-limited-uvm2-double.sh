@@ -2,7 +2,7 @@
 
 
 # $# does not include itself in the count of arguments
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
     echo "USAGE: $0 GPUARCH"
     exit 1
 fi
@@ -13,10 +13,15 @@ RESULTS_DIR="./results/uvm2"
 
 mkdir -p $RESULTS_DIR
 
-declare -a expo=( 4  6)
-declare -a mant=(28 29 30)
-# declare -a expo=( 4  5  6  7  8  9 10 11)
-# declare -a mant=(28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52)
+declare -a expo=(11)
+declare -a mant=(21 24 28 32 36 40 44 48 52)
+
+use_limited_configuration_set=$2
+
+if [[ "$use_limited_configuration_set" = false ]]; then
+    declare -a expo=( 4  5  6  7  8  9 10 11)
+    declare -a mant=(28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52)
+fi
 
 for e in "${expo[@]}"
 do
@@ -30,7 +35,7 @@ do
         echo $outputfile
 
         cd benchmarks
-        ./compile64-uvm2.sh $e $m $GPUARCH 2>/dev/null
+        ./compile64-uvm2.sh $e $m $GPUARCH $use_limited_configuration_set 2>/dev/null
         cd ..
 
         ./benchmarks/adv-ff > $outputfile
@@ -46,7 +51,7 @@ done
 outputfileTMP="$RESULTS_DIR/TMP..IEEE..double.results"
 
 cd benchmarks
-./compile64-uvm2.sh 11 52 $GPUARCH 2>/dev/null
+./compile64-uvm2.sh 11 52 $GPUARCH $use_limited_configuration_set 2>/dev/null
 cd ..
 
 ./benchmarks/adv > $outputfileTMP

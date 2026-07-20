@@ -34,6 +34,12 @@
   #define factor 3.0
 #endif
 
+#if defined(INPUT_SIZE_SMALL)
+  #define reserve_gb 2
+#else
+  #define reserve_gb 8
+#endif
+
 // Calculate the power parameter, and then weighted interpolating
 // Without using shared memory
 __global__
