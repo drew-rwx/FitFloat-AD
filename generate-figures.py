@@ -1,5 +1,42 @@
 #!/usr/bin/env python3
 
+# This file is part of FitFloat, a drop-in floating-point array replacement supporting user-specified precision on GPUs with the goal of reducing storage requirements.
+#
+# BSD 3-Clause License
+#
+# Copyright (c) 2026, Andrew Rodriguez, and Martin Burtscher
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# URL: The latest version of this code is available at https://github.com/burtscher/FitFloat/.
+#
+# Publication: This work is described in detail in the following paper.
+# Andrew Rodriguez, and Martin Burtscher. "FitFloat: Read/Write Random-Access Compressed Floating-Point Arrays for GPUs"
+#
+# Sponsor: This material is based upon work supported by the U.S. National Science Foundation under Grant Number 2403380 and by the U.S. Department of Energy, Office of Science, Office of Advanced Scientific Research (ASCR), under Award Number DE-SC0022223.
 
 #
 # imports
@@ -50,11 +87,6 @@ def parse_runtimes(files, runtime_dict):
 		datat = list(enumerate(data))
 		data = [float(d.split()[-2]) for d in data]
 
-		# print(*datat, sep="\n")
-		# print()
-
-		# print(*data, sep="\n")
-
 		runtimes = list()
 
 		if DATATYPE == "float":
@@ -82,10 +114,6 @@ def parse_runtimes(files, runtime_dict):
 
 		runtime_dict[bits].append(runtimes)
 
-		# print()
-		# print(bits)
-		# print(*runtimes, sep="\n")
-
 
 def get_geomean_speedups(uvm_speedups, uvm_fitf_runtimes, uvm_ieee_runtimes):
 	if len(uvm_fitf_runtimes.keys()) != len(uvm_ieee_runtimes.keys()):
@@ -110,8 +138,6 @@ def get_geomean_speedups(uvm_speedups, uvm_fitf_runtimes, uvm_ieee_runtimes):
 			for fitf, ieee in zip(fitf_runtimes, ieee_runtimes):
 				speedups_per_benchmark.append(ieee / fitf)
 
-			# print(bits, *speedups_per_benchmark, sep="\n", end="\n\n")
-
 			if bits not in uvm_speedups:
 				uvm_speedups[bits] = list()
 
@@ -124,6 +150,16 @@ def get_geomean_speedups(uvm_speedups, uvm_fitf_runtimes, uvm_ieee_runtimes):
 			sp = statistics.geometric_mean(bits_list)
 
 		uvm_speedups[bits] = sp
+
+
+def print_geomean_speedups(uvm_speedups, title):
+	print(f"*** {title} ***")
+	print("FitFloat Bits: Speedup")
+	speedups = list(uvm_speedups.items())
+	speedups.reverse()
+	for bits, sp in speedups:
+		print(f"{bits}: {sp:.2f}x")
+	print()
 
 
 #
@@ -177,12 +213,10 @@ parse_runtimes(files, uvm2_ieee_runtimes)
 
 uvm1_speedups = dict()
 get_geomean_speedups(uvm1_speedups, uvm1_fitf_runtimes, uvm1_ieee_runtimes)
-
-print(*list(uvm1_speedups.items()), sep="\n", end="\n\n")
+print_geomean_speedups(uvm1_speedups, "Geometric mean speedups, FitFloat arrays fit in global memory")
 
 # UVM2
 
 uvm2_speedups = dict()
 get_geomean_speedups(uvm2_speedups, uvm2_fitf_runtimes, uvm2_ieee_runtimes)
-
-print(*list(uvm2_speedups.items()), sep="\n", end="\n\n")
+print_geomean_speedups(uvm2_speedups, "Geometric mean speedups, Native and FitFloat arrays do not fit in global memory")
