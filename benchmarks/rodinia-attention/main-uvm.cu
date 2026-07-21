@@ -10,7 +10,7 @@
 #if defined(UVM1)
   #define factor 1.1
 #else
-  #define factor 3.0
+  #define factor 2.0
 #endif
 
 #if defined(INPUT_SIZE_SMALL)
