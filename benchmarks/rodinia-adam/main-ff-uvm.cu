@@ -13,9 +13,9 @@
 #endif
 
 #if defined(INPUT_SIZE_SMALL)
-  #define reserve_gb 2
+  #define reserve_gb 4
 #else
-  #define reserve_gb 8
+  #define reserve_gb 12
 #endif
 
 __global__

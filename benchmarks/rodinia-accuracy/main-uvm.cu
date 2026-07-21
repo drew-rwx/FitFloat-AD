@@ -17,7 +17,7 @@
 #if defined(INPUT_SIZE_SMALL)
   #define reserve_gb 2
 #else
-  #define reserve_gb 8
+  #define reserve_gb 4
 #endif
 
 #define GPU_NUM_THREADS 256
