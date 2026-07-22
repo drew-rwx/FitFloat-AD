@@ -47,6 +47,7 @@ import glob
 from pathlib import Path
 import sys
 import statistics
+import matplotlib.pyplot as plt
 
 
 #
@@ -162,9 +163,35 @@ def print_geomean_speedups(uvm_speedups, title):
 	print()
 
 
+def generate_geomean_figure(geomean_speedups, filename):
+	FIG_SIZE_WIDTH = 5
+	FIG_SIZE_HEIGHT = 5
+
+	fig, ax = plt.subplots(figsize=(FIG_SIZE_WIDTH, FIG_SIZE_HEIGHT))
+
+	ax.set_ylabel("Number of Bits")
+	ax.set_xlabel("Speedup")
+
+	for bits, sp in geomean_speedups.items():
+		ax.barh(bits, sp, color="red", edgecolor="black", height=0.45)
+
+	ax.xaxis.grid(True, linestyle='--', linewidth=0.5)
+	ax.set_axisbelow(True)
+
+	if DATATYPE == "float":
+		plt.ylim(16, 33)
+	else:
+		plt.ylim(32, 65)
+
+	plt.tight_layout()
+	plt.savefig(filename)
+	# plt.show()
+
+
 #
 # CLI check
 #
+
 
 if len(sys.argv) != 2:
 	quit(f"USAGE: {sys.argv[0]} float|double")
@@ -220,3 +247,11 @@ print_geomean_speedups(uvm1_speedups, "Geometric mean speedups, FitFloat arrays 
 uvm2_speedups = dict()
 get_geomean_speedups(uvm2_speedups, uvm2_fitf_runtimes, uvm2_ieee_runtimes)
 print_geomean_speedups(uvm2_speedups, "Geometric mean speedups, Native and FitFloat arrays do not fit in global memory")
+
+#
+# Figures
+#
+
+generate_geomean_figure(uvm1_speedups, f"./figures/{DATATYPE.capitalize()}.UVM1.Geomean.pdf")
+
+generate_geomean_figure(uvm2_speedups, f"./figures/{DATATYPE.capitalize()}.UVM2.Geomean.pdf")
