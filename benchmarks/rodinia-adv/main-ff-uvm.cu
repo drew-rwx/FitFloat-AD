@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
   size_t total_bytes = 0;
   cudaMemGetInfo(&free_bytes, &total_bytes);
 
-  size_t reserved_size = free_bytes - 70000000;
+  size_t reserved_size = free_bytes - 700000000;
 
   int* reserved = nullptr;
   cudaMalloc((void**) &reserved, reserved_size);
