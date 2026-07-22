@@ -6,13 +6,13 @@
 #include "../../FitFloat.h"
 
 #if defined(UVM1)
-  #define factor 1.1
+  #define factor 1.2
 #else
   #define factor 3.0
 #endif
 
 #if defined(INPUT_SIZE_SMALL)
-  #define reserve_gb 2
+  #define reserve_gb 6
 #else
   #define reserve_gb 8
 #endif
