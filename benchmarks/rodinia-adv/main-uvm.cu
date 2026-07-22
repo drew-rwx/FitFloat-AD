@@ -11,12 +11,6 @@
   #define factor 3.0
 #endif
 
-#if defined(INPUT_SIZE_SMALL)
-  #define reserve_gb 6
-#else
-  #define reserve_gb 8
-#endif
-
 #define p_IJWID 6
 #define p_JID   4
 #define p_JWID  5
@@ -54,7 +48,11 @@ int main(int argc, char **argv) {
   size_t total_bytes = 0;
   cudaMemGetInfo(&free_bytes, &total_bytes);
 
+#if defined(UVM1)
   size_t reserved_size = free_bytes - 700000000;
+#else
+  size_t reserved_size = free_bytes - 70000000;
+#endif
 
   int* reserved = nullptr;
   cudaMalloc((void**) &reserved, reserved_size);
