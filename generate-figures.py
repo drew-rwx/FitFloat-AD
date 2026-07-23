@@ -321,13 +321,63 @@ for bits in bits_in_use:
 	else:
 		uvm_speedups[bits] = bits_list[0]
 
-# for bits in bits_in_use:
-
-# 	speedups_per_benchmark = uvm_speedups[bits]
-
-# 	print(bits, end=" ")
-# 	for sp in speedups_per_benchmark:
-# 		print(f"{sp:.2f}", end=" ")
-# 	print()
-
 # generate a figure, one line for each benchmark
+
+speedups_by_benchmark = list()
+for benchmark_number in range(len(uvm_speedups[bits_in_use[-1]])):
+
+	benchmark_data = list()
+	for bits in bits_in_use:
+		if len(uvm_speedups[bits]) == benchmark_number:
+			continue
+		benchmark_data.append((bits, uvm_speedups[bits][benchmark_number]))
+
+	speedups_by_benchmark.append(benchmark_data)
+
+if DATATYPE == "float":
+	BM_NAMES = [
+	"Accuracy",
+	"Adam",
+	"Aidw",
+	"Attention",
+	"Bilateral",
+	"Bincount",
+	"Bscholes",
+	"Car",
+	"Chi2",
+	"Fhd",
+	"Adam OPT",
+	"Bsearch"
+	]
+else:
+	BM_NAMES = ["Adv", "Asta", "Burger"]
+
+BM_COLORS = ["#b4ddd4", "#214d4e", "#40e18c", "#de0ca3", "#1e7b20", "#edb1ff", "#5e2a96", "#b3e61c", "#7f2b04", "#61f22d", "#125cb9", "#47a2f7"]
+
+FIG_SIZE_WIDTH = 7
+FIG_SIZE_HEIGHT = 5
+
+fig, ax = plt.subplots(figsize=(FIG_SIZE_WIDTH, FIG_SIZE_HEIGHT))
+
+ax.set_xlabel("Number of Bits")
+ax.set_ylabel("Speedup")
+
+for benchmark_number in range(len(speedups_by_benchmark)):
+	bm_x = [e[0] for e in speedups_by_benchmark[benchmark_number]]
+	bm_y = [e[1] for e in speedups_by_benchmark[benchmark_number]]
+	ax.plot(bm_x, bm_y, color=BM_COLORS[benchmark_number], label=BM_NAMES[benchmark_number], marker="o", markeredgecolor="black")
+
+ax.yaxis.grid(True, linestyle='--', linewidth=0.5)
+ax.set_axisbelow(True)
+
+ax.set_yscale("log")
+
+plt.legend(loc='center right', bbox_to_anchor=(1.22, 0.5), fancybox=True, shadow=True)
+
+if DATATYPE == "float":
+	plt.xlim(16, 33)
+else:
+	plt.xlim(32, 65)
+
+plt.tight_layout()
+plt.savefig(f"./figures/{DATATYPE.capitalize()}.Individual.Codes.pdf")
