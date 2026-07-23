@@ -98,12 +98,12 @@ def parse_runtimes(files, runtime_dict):
 			runtimes.append(statistics.geometric_mean(data[4:7])) # bilateral
 			runtimes.append(statistics.geometric_mean(data[7:12])) # bincount
 			runtimes.append(data[12]) # bscholes
-			if expo >= 6:
-				runtimes.append(statistics.geometric_mean(data[13:17])) # bsearch
 			runtimes.append(data[17]) # car
 			runtimes.append(data[18]) # chi2
 			runtimes.append(data[19]) # fhd
 			runtimes.append(data[20]) # adam OPT
+			if expo >= 6:
+				runtimes.append(statistics.geometric_mean(data[13:17])) # bsearch
 
 		if DATATYPE == "double":
 			runtimes.append(data[0]) # adv
@@ -203,7 +203,7 @@ if DATATYPE != "float" and DATATYPE != "double":
 
 
 #
-# Parse results
+# Parse results, Geomean
 #
 
 
@@ -255,3 +255,79 @@ print_geomean_speedups(uvm2_speedups, "Geometric mean speedups, Native and FitFl
 generate_geomean_figure(uvm1_speedups, f"./figures/{DATATYPE.capitalize()}.UVM1.Geomean.pdf")
 
 generate_geomean_figure(uvm2_speedups, f"./figures/{DATATYPE.capitalize()}.UVM2.Geomean.pdf")
+
+
+#
+# Parse results, individual codes
+#
+
+
+files = list_files(f"./results/uvm1/FF..{DATATYPE}..*")
+files.sort(reverse=True)
+uvm_fitf_runtimes = dict()
+parse_runtimes(files, uvm_fitf_runtimes)
+
+files = list_files(f"./results/uvm1/IEEE..{DATATYPE}..*")
+files.sort(reverse=True)
+uvm_ieee_runtimes = dict()
+parse_runtimes(files, uvm_ieee_runtimes)
+
+uvm_speedups = dict()
+bits_in_use = list(uvm_fitf_runtimes.keys())
+bits_in_use.sort()
+
+# calculate speedups
+for bits in bits_in_use:
+	fitf_runtimes_list = uvm_fitf_runtimes[bits]
+	ieee_runtimes_list = uvm_ieee_runtimes[bits]
+
+	if len(fitf_runtimes_list) != len(ieee_runtimes_list):
+		quit(f"ERROR: FitFloat runtimes do not align with IEEE runtimes for bit count {bits}!")
+
+	for fitf_runtimes, ieee_runtimes in zip(fitf_runtimes_list, ieee_runtimes_list):
+		if len(fitf_runtimes) != len(ieee_runtimes):
+			quit(f"ERROR: FitFloat runtimes do not align with IEEE runtimes for bit count {bits}!")
+
+		speedups_per_benchmark = list()
+
+		for fitf, ieee in zip(fitf_runtimes, ieee_runtimes):
+			speedups_per_benchmark.append(ieee / fitf)
+
+		if bits not in uvm_speedups:
+			uvm_speedups[bits] = list()
+
+		uvm_speedups[bits].append(speedups_per_benchmark)
+
+# take geomean of bit counts with multiple configurations
+for bits in bits_in_use:
+
+	bits_list = uvm_speedups[bits]
+
+	if len(uvm_speedups[bits]) > 1:
+
+		combined_list = list()
+
+		# iterate over benchmarks
+		for idx in range(len(bits_list[0])):
+			temp_list = list()
+			for l in bits_list:
+				if idx == len(l): # skip bsearch
+					continue
+				temp_list.append(l[idx])
+			combined_list.append(statistics.geometric_mean(temp_list))
+
+		uvm_speedups[bits] = combined_list
+
+	else:
+		uvm_speedups[bits] = bits_list[0]
+
+# for bits in bits_in_use:
+
+# 	speedups_per_benchmark = uvm_speedups[bits]
+
+# 	print(bits, end=" ")
+# 	for sp in speedups_per_benchmark:
+# 		print(f"{sp:.2f}", end=" ")
+# 	print()
+
+# generate a figure, one line for each benchmark
